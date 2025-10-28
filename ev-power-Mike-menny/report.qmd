@@ -1,0 +1,57 @@
+---
+title: "EV Power - Lab 4 Project Report"
+format: typst
+execute:
+  warning: false
+  message: false
+---
+
+# Example Solution 1
+
+## **Part 0: libraries**
+
+```{r}
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("tidyverse")
+install.packages("tidyr")
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(tidyr)
+```
+
+## **Part 1:** **Defining Research Question**
+
+Chosen Question: Is there a positive relationtship between ev registration and Renewable Energy Use? 
+\## **Part 2: Data Preparation and Cleaning**
+
+```{r}
+ru<-read_csv("./data/renew-use-2023.csv")
+ru$Renewable_Use_2023<- as.double(gsub("[A-Za-z]", "",ru$Renewable_Use_2023))
+ev<-read_csv("./data/ev-registrations-by-state-2023.csv")
+colnames(ev)<-c("state","count")
+ev<-ev|>filter(str_detect(count,"\\d"))
+ev$count<-as.double(gsub("[^0-9]","",ev$count))
+ev$state<-state.abb[match(ev$state, state.name)]
+
+```
+
+## **Part 3: Joining / Pivoting Datasets for Analysis**
+
+```{r}
+sru<-ru|>group_by(State)|>summarize(renewable = sum(Renewable_Use_2023))
+total<-inner_join(x=sru, y=ev, by=join_by(State==state))
+```
+
+## **Part 4: Mapping Visualization**
+
+```{r}
+total|>ggplot(aes(x=renewable,y=count))+
+    geom_point()+
+    scale_x_log10()+
+    scale_y_log10()
+```
+
+From the Scatter plot, we can tell that there is a positive relationship between the registered ev company and renewable resources.
